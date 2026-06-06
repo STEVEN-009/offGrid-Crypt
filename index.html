@@ -55,7 +55,6 @@
         .status-secure { background-color: rgba(0, 255, 136, 0.1); color: var(--neon-verde); border: 1px solid rgba(0, 255, 136, 0.2); }
         .status-risk { background-color: rgba(255, 51, 85, 0.1); color: var(--neon-rojo); border: 1px solid rgba(255, 51, 85, 0.2); }
 
-        /* NUEVO: Selector de tamaño de matriz comercial */
         .size-selector {
             display: flex;
             gap: 8px;
@@ -81,6 +80,17 @@
             color: var(--neon-oro);
         }
 
+        .instrucciones {
+            background-color: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 11px;
+            color: #a0aec0;
+            text-align: left;
+            line-height: 1.4;
+            border-left: 3px solid var(--neon-azul);
+        }
+
         .form-group { margin: 5px 0; }
         
         input[type="text"] {
@@ -94,7 +104,6 @@
         .cumplido { color: var(--neon-verde) !important; }
         #contador { font-size: 11px; color: var(--texto-muted); display: block; margin-top: 4px; }
 
-        /* Cuadrícula dinámica */
         .grid { 
             display: grid; 
             gap: 6px; 
@@ -104,7 +113,7 @@
             padding: 10px;
             border-radius: 14px;
             max-height: 260px;
-            overflow-y: auto; /* Permite scroll si la matriz es muy grande */
+            overflow-y: auto;
         }
         
         .cell { 
@@ -122,10 +131,10 @@
         .btn-success { background-color: var(--neon-verde); color: #000000; }
         .btn-danger { background-color: transparent; color: var(--neon-rojo); border: 1px solid rgba(255, 51, 85, 0.3); }
 
-        /* NUEVO: Pantalla Emergente de Bloqueo Paywall (Venta) */
+        /* MODAL DE VENTA (PAYWALL) */
         .paywall-modal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(10, 11, 13, 0.95); border-radius: 24px;
+            background-color: rgba(10, 11, 13, 0.96); border-radius: 24px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             padding: 30px; text-align: center; z-index: 10;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
@@ -134,8 +143,15 @@
         .paywall-icon { font-size: 40px; color: var(--neon-oro); margin-bottom: 15px; }
         .paywall-title { font-size: 20px; color: #fff; margin-bottom: 10px; }
         .paywall-desc { font-size: 12px; color: #a0aec0; margin-bottom: 20px; line-height: 1.5; }
-        .btn-pay { background-color: var(--neon-oro); color: #000; margin-bottom: 10px; font-size: 14px; }
+        .btn-pay { background-color: var(--neon-oro); color: #000; margin-bottom: 15px; font-size: 14px; }
+        
+        #input-licencia {
+            width: 80%; padding: 10px; background-color: #0d0f12; border: 1px solid var(--neon-oro);
+            border-radius: 8px; color: #fff; text-align: center; font-family: 'JetBrains Mono', monospace;
+            font-size: 14px; margin-bottom: 10px; letter-spacing: 1px;
+        }
     </style>
+    <link rel="manifest" href="./manifest.json">
 </head>
 <body>
 
@@ -143,7 +159,6 @@
         
         <!-- POPUP DE VENTA (PAYWALL) -->
         <div id="paywall" class="paywall-modal">
-            <div id="paywall" class="paywall-modal">
             <div class="paywall-icon">👑</div>
             <div class="paywall-title">Desbloquear Versión Pro</div>
             <div class="paywall-desc">
@@ -151,22 +166,11 @@
                 Protege tu patrimonio en papel sin conexión a internet de por vida.
             </div>
             
-            <!-- Campo para introducir la licencia comprada -->
-            <input type="text" id="input-licencia" placeholder="INTRODUCE TU CÓDIGO PRO" style="margin-bottom: 10px; width: 80%; font-size: 12px; border: 1px solid var(--neon-oro); padding: 8px;">
-            
+            <input type="text" id="input-licencia" placeholder="INTRODUCE TU CÓDIGO PRO">
             <button class="btn-pay" onclick="activarLicenciaPro()">Activar Licencia Local</button>
-            <p style="font-size: 10px; color: var(--texto-muted); margin-bottom: 15px;">¿No tienes un código? Cómpralo en nuestra web con internet.</p>
             
+            <p style="font-size: 10px; color: var(--texto-muted); margin-bottom: 15px;">¿No tienes un código? Cómpralo en nuestra web con internet.</p>
             <button class="btn-danger" style="padding:6px; font-size:11px;" onclick="cerrarPaywall()">Volver a la versión Gratis</button>
-        </div>
-            <div class="paywall-icon">👑</div>
-            <div class="paywall-title">Desbloquear Versión Pro</div>
-            <div class="paywall-desc">
-                Las matrices de 12x12 y 24x24 están diseñadas criptográficamente para ocultar frases semilla completas de <strong>MetaMask, Ledger o Trezor</strong>.<br><br>
-                Protege tu patrimonio en papel sin conexión a internet de por vida.
-            </div>
-            <button class="btn-pay" onclick="simularCompra()">Comprar Licencia Pro ($4.99)</button>
-            <button class="btn-danger" style="padding:8px;" onclick="cerrarPaywall()">Volver a la versión Gratis</button>
         </div>
 
         <header>
@@ -175,11 +179,16 @@
             <div id="status-badge" class="status-badge status-risk">Verificando entorno...</div>
         </header>
 
-        <!-- SECTOR DE MODELO DE NEGOCIO -->
+        <!-- SECTOR DE SELECCIÓN DE TAMAÑO -->
         <div class="size-selector">
             <button id="btn-size-5" class="size-btn active" onclick="cambiarTamano(5)">5x5 (Free)</button>
-            <button class="size-btn premium-badge" onclick="abrirPaywall('12x12')">12x12 (Pro)</button>
-            <button class="size-btn premium-badge" onclick="abrirPaywall('24x24')">24x24 (Max)</button>
+            <button id="btn-size-12" class="size-btn premium-badge" onclick="cambiarTamano(12)">12x12 (Pro)</button>
+            <button id="btn-size-24" class="size-btn premium-badge" onclick="cambiarTamano(24)">24x24 (Max)</button>
+        </div>
+
+        <div class="instrucciones">
+            <strong>1.</strong> Crea una clave segura.<br>
+            <strong>2.</strong> Dibuja tu patrón tocando las casillas.
         </div>
 
         <div class="form-group">
@@ -192,7 +201,6 @@
             <span id="contador">Letras clave: 0 | Patrón: 0</span>
         </div>
 
-        <!-- Rejilla que se adapta por JavaScript -->
         <div class="grid" id="cuadrícula"></div>
 
         <div class="actions-panel">
@@ -221,15 +229,12 @@
         window.addEventListener('offline', verificarConexion);
         verificarConexion();
 
-        // Inicializar cuadrícula adaptativa
         function inicializarGrid() {
             const contenedorGrid = document.getElementById('cuadrícula');
             contenedorGrid.innerHTML = "";
             posicionesSeleccionadas = [];
             
-            // Ajustar columnas de la rejilla según el tamaño elegido
             contenedorGrid.style.gridTemplateColumns = `repeat(${tamanoActual}, 1fr)`;
-            
             const totalCasillas = tamanoActual * tamanoActual;
             validarClaveYContadores();
 
@@ -265,53 +270,25 @@
             }
         }
 
+        // --- MANEJO DE TAMAÑOS Y LOCK COMERCIAL ---
         function cambiarTamano(nuevoTamano) {
-            tamanoActual = nuevoTamano;
-            inicializarGrid();
-        }
-
-        // Funciones del Paywall Comercial
-     // --- SISTEMA RE AL DE LICENCIAS COMERCIALES ---
-        
-        // Esta función simula lo que pasaría si el usuario ingresa su código comprado
-        function activarLicenciaPro() {
-            const codigoIntroducido = document.getElementById('input-licencia').value.trim().toUpperCase();
-            
-            if (codigoIntroducido === "") {
-                alert("Socio, introduce el código de activación que recibiste al pagar.");
+            // Si el usuario elige un tamaño Pro y NO está comprado, bloqueamos con el Paywall
+            if ((nuevoTamano === 12 || nuevoTamano === 24) && localStorage.getItem('licencia_pro_activa') !== 'true') {
+                abrirPaywall();
                 return;
             }
 
-            // ALGORITMO DE VALIDACIÓN ANALÓGICA:
-            // Nuestro algoritmo exige que el código empiece por "PRO-" y que la suma de sus 
-            // números finales sea un múltiplo de 7 (un secreto que solo tú y yo sabemos).
-            // Códigos válidos para probar: PRO-77, PRO-14, PRO-49, PRO-205
+            tamanoActual = nuevoTamano;
+            inicializarGrid();
             
-            if (codigoIntroducido.startsWith("PRO-")) {
-                const parteNumerica = codigoIntroducido.replace("PRO-", "");
-                const numero = parseInt(parteNumerica);
-                
-                if (!isNaN(numero) && numero % 7 === 0) {
-                    // ¡CÓDIGO VÁLIDO! Guardamos el estado de forma permanente en el teléfono
-                    localStorage.setItem('licencia_pro_activa', 'true');
-                    alert("¡👑 LICENCIA PRO ACTIVADA CORRECTAMENTE!\n\nLas matrices de 12x12 y 24x24 han sido desbloqueadas de por vida en este dispositivo. Ya puedes volver al Modo Avión de forma segura.");
-                    
-                    // Actualizamos la interfaz quitando las restricciones de pago
-                    removerBloqueosComerciales();
-                    cerrarPaywall();
-                    return;
-                }
-            }
-            
-            // Si no pasa la validación matemática
-            alert("❌ CÓDIGO INVÁLIDO\n\nEl sistema criptográfico local no pudo verificar esta licencia. Asegúrate de copiarlo exactamente como te llegó por correo.");
+            // Ajustar los estilos del botón activo
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+            if(nuevoTamano === 5) document.getElementById('btn-size-5').classList.add('active');
+            if(nuevoTamano === 12) document.getElementById('btn-size-12').classList.add('active');
+            if(nuevoTamano === 24) document.getElementById('btn-size-24').classList.add('active');
         }
 
         function abrirPaywall() {
-            // Si ya está comprado, no abrimos el paywall, directo cambiamos el tamaño
-            if (localStorage.getItem('licencia_pro_activa') === 'true') {
-                return;
-            }
             document.getElementById('paywall').classList.add('open');
         }
 
@@ -319,40 +296,37 @@
             document.getElementById('paywall').classList.remove('open');
         }
 
-        // Función para cambiar el tamaño solo si está comprado
-        function seleccionarTamañoAvanzado(tamano) {
-            if (localStorage.getItem('licencia_pro_activa') === 'true') {
-                cambiarTamano(tamano);
-                
-                // Actualizar estilo visual de los botones activos
-                document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
-            } else {
-                abrirPaywall();
+        function activarLicenciaPro() {
+            const codigoIntroducido = document.getElementById('input-licencia').value.trim().toUpperCase();
+            
+            if (codigoIntroducido === "") {
+                alert("Socio, introduce el código de activación.");
+                return;
             }
+
+            // Validación matemática local (múltiplo de 7). Códigos válidos: PRO-14, PRO-49, PRO-77
+            if (codigoIntroducido.startsWith("PRO-")) {
+                const parteNumerica = codigoIntroducido.replace("PRO-", "");
+                const numero = parseInt(parteNumerica);
+                
+                if (!isNaN(numero) && numero % 7 === 0) {
+                    localStorage.setItem('licencia_pro_activa', 'true');
+                    alert("¡👑 LICENCIA PRO ACTIVADA EN ESTE DISPOSITIVO!");
+                    cerrarPaywall();
+                    location.reload(); // Recarga la app ya desbloqueada de forma limpia
+                    return;
+                }
+            }
+            
+            alert("❌ CÓDIGO INVÁLIDO\n\nEl algoritmo local no pudo validar esta licencia.");
         }
 
-        function removerBloqueosComerciales() {
-            // Cambiar los textos de los botones para reflejar que ya es Pro de por vida
-            const botones = document.querySelectorAll('.size-btn');
-            botones[1].setAttribute('onclick', 'seleccionarTamañoAvanzado(12)');
-            botones[1].innerText = "12x12 (Pro)";
-            botones[2].setAttribute('onclick', 'seleccionarTamañoAvanzado(24)');
-            botones[2].innerText = "24x24 (Max)";
-        }
-
-        // Verificar si ya había comprado la app anteriormente al cargar la página
         function verificarLicenciaAlCargar() {
             if (localStorage.getItem('licencia_pro_activa') === 'true') {
-                removerBloqueosComerciales();
+                // Si ya es Pro, removemos los tags visuales de bloqueo dorados
+                document.getElementById('btn-size-12').classList.remove('premium-badge');
+                document.getElementById('btn-size-24').classList.remove('premium-badge');
             }
-        }
-
-        // Modificamos el arranque inicial para incluir la verificación
-        const inicioOriginal = inicializarGrid;
-        inicializarGrid = function() {
-            inicioOriginal();
-            verificarLicenciaAlCargar();
         }
 
         function validarClaveYContadores() {
@@ -416,6 +390,8 @@
             });
         }
 
+        // Ejecutar los arranques iniciales
+        verificarLicenciaAlCargar();
         inicializarGrid();
     </script>
 </body>
