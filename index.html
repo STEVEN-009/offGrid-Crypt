@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OffGrid Crypt - Generador Analógico</title>
+    <title>OffGrid Crypt - Versión Comercial</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="./manifest.json">
     <style>
         :root {
             --bg-principal: #0a0b0d;
@@ -13,15 +12,11 @@
             --neon-verde: #00ff88;
             --neon-azul: #0077ff;
             --neon-rojo: #ff3355;
+            --neon-oro: #ffd700;
             --texto-muted: #6c7a89;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body { 
             font-family: 'JetBrains Mono', monospace; 
@@ -38,7 +33,7 @@
             width: 100%;
             max-width: 420px;
             background-color: var(--bg-tarjeta);
-            min-height: 90vh;
+            min-height: 92vh;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.7);
             border: 1px solid #222630;
@@ -46,190 +41,142 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 15px;
+            gap: 12px;
+            position: relative;
         }
 
-        header h1 {
-            font-size: 18px;
-            letter-spacing: -0.5px;
-            margin: 5px 0;
-            color: #ffffff;
-        }
-
-        header span {
-            font-size: 10px;
-            color: var(--texto-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        header h1 { font-size: 18px; letter-spacing: -0.5px; margin: 5px 0; color: #ffffff; }
+        header span { font-size: 10px; color: var(--texto-muted); text-transform: uppercase; letter-spacing: 1px; }
 
         .status-badge {
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: bold;
-            margin: 10px 0;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
+            padding: 6px 12px; border-radius: 10px; font-size: 10px; font-weight: bold;
+            margin: 5px 0; display: inline-block; width: 100%; text-align: center;
         }
         .status-secure { background-color: rgba(0, 255, 136, 0.1); color: var(--neon-verde); border: 1px solid rgba(0, 255, 136, 0.2); }
         .status-risk { background-color: rgba(255, 51, 85, 0.1); color: var(--neon-rojo); border: 1px solid rgba(255, 51, 85, 0.2); }
 
-        .instrucciones {
-            background-color: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 11px;
-            color: #a0aec0;
-            text-align: left;
-            line-height: 1.4;
-            border-left: 3px solid var(--neon-azul);
-        }
-
-        .form-group {
+        /* NUEVO: Selector de tamaño de matriz comercial */
+        .size-selector {
+            display: flex;
+            gap: 8px;
             margin: 5px 0;
         }
-        
-        input[type="text"] {
-            width: 100%;
-            padding: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 15px;
+        .size-btn {
+            flex: 1;
+            padding: 10px;
             background-color: #0d0f12;
             border: 2px solid #222630;
-            border-radius: 12px;
-            color: #ffffff;
-            text-align: center;
-            letter-spacing: 2px;
-            transition: border-color 0.3s;
+            color: #fff;
+            font-size: 11px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        input[type="text"]:focus {
-            outline: none;
+        .size-btn.active {
             border-color: var(--neon-azul);
+            background-color: rgba(0, 119, 255, 0.1);
+        }
+        .size-btn.premium-badge {
+            border-color: rgba(255, 215, 0, 0.3);
+            color: var(--neon-oro);
         }
 
-        /* Lista de requerimientos de contraseña */
-        .requisitos-lista {
-            text-align: left;
-            font-size: 11px;
-            margin: 8px 0;
-            color: var(--texto-muted);
-            list-style: none;
+        .form-group { margin: 5px 0; }
+        
+        input[type="text"] {
+            width: 100%; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 14px;
+            background-color: #0d0f12; border: 2px solid #222630; border-radius: 12px;
+            color: #ffffff; text-align: center; letter-spacing: 2px;
         }
-        .requisitos-lista li {
-            margin: 3px 0;
-            transition: color 0.2s;
-        }
+
+        .requisitos-lista { text-align: left; font-size: 11px; margin: 6px 0; color: var(--texto-muted); list-style: none; }
+        .requisitos-lista li { margin: 2px 0; }
         .cumplido { color: var(--neon-verde) !important; }
+        #contador { font-size: 11px; color: var(--texto-muted); display: block; margin-top: 4px; }
 
-        #contador {
-            font-size: 11px;
-            color: var(--texto-muted);
-            display: block;
-            margin-top: 6px;
-        }
-
+        /* Cuadrícula dinámica */
         .grid { 
             display: grid; 
-            grid-template-columns: repeat(5, 1fr); 
-            gap: 8px; 
+            gap: 6px; 
             justify-content: center; 
             margin: 10px 0; 
+            background-color: #0d0f12;
+            padding: 10px;
+            border-radius: 14px;
+            max-height: 260px;
+            overflow-y: auto; /* Permite scroll si la matriz es muy grande */
         }
         
         .cell { 
-            aspect-ratio: 1;
-            background-color: #0d0f12; 
-            border: 2px solid #222630; 
-            border-radius: 10px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 15px; 
-            text-transform: uppercase; 
-            cursor: pointer; 
-            user-select: none; 
-            transition: all 0.15s ease;
+            aspect-ratio: 1; background-color: #14171c; border: 1px solid #222630; border-radius: 6px; 
+            display: flex; align-items: center; justify-content: center; font-weight: bold; 
+            font-size: 12px; text-transform: uppercase; cursor: pointer; user-select: none; 
         }
         
-        @media (max-width: 360px) {
-            .cell { font-size: 13px; border-radius: 8px; }
-            .app-container { padding: 15px; }
-        }
+        .cell.selected { background-color: var(--neon-azul); color: #ffffff; border-color: #ffffff; }
+        .cell.procesada { border-color: rgba(0, 255, 136, 0.2); }
 
-        .cell.selected { 
-            background-color: var(--neon-azul); 
-            color: #ffffff; 
-            border-color: #ffffff;
-            box-shadow: 0 0 12px rgba(0, 119, 255, 0.4);
-        }
-        .cell.procesada {
-            border-color: rgba(0, 255, 136, 0.3);
-        }
-
-        .actions-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        button { 
-            width: 100%;
-            padding: 14px; 
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; 
-            font-weight: bold;
-            border-radius: 12px; 
-            border: none; 
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        button:disabled {
-            background-color: #1e2330 !important;
-            color: #4a5568 !important;
-            cursor: not-allowed;
-            box-shadow: none !important;
-        }
-        .btn-success { background-color: var(--neon-verde); color: #000000; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2); }
+        .actions-panel { display: flex; flex-direction: column; gap: 8px; }
+        button { width: 100%; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; }
+        button:disabled { background-color: #1e2330 !important; color: #4a5568 !important; cursor: not-allowed; }
+        .btn-success { background-color: var(--neon-verde); color: #000000; }
         .btn-danger { background-color: transparent; color: var(--neon-rojo); border: 1px solid rgba(255, 51, 85, 0.3); }
 
-        @media (min-width: 450px) {
-            .app-container {
-                height: auto;
-                min-height: 600px;
-            }
+        /* NUEVO: Pantalla Emergente de Bloqueo Paywall (Venta) */
+        .paywall-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 11, 13, 0.95); border-radius: 24px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 30px; text-align: center; z-index: 10;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
+        .paywall-modal.open { opacity: 1; pointer-events: auto; }
+        .paywall-icon { font-size: 40px; color: var(--neon-oro); margin-bottom: 15px; }
+        .paywall-title { font-size: 20px; color: #fff; margin-bottom: 10px; }
+        .paywall-desc { font-size: 12px; color: #a0aec0; margin-bottom: 20px; line-height: 1.5; }
+        .btn-pay { background-color: var(--neon-oro); color: #000; margin-bottom: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
         
+        <!-- POPUP DE VENTA (PAYWALL) -->
+        <div id="paywall" class="paywall-modal">
+            <div class="paywall-icon">👑</div>
+            <div class="paywall-title">Desbloquear Versión Pro</div>
+            <div class="paywall-desc">
+                Las matrices de 12x12 y 24x24 están diseñadas criptográficamente para ocultar frases semilla completas de <strong>MetaMask, Ledger o Trezor</strong>.<br><br>
+                Protege tu patrimonio en papel sin conexión a internet de por vida.
+            </div>
+            <button class="btn-pay" onclick="simularCompra()">Comprar Licencia Pro ($4.99)</button>
+            <button class="btn-danger" style="padding:8px;" onclick="cerrarPaywall()">Volver a la versión Gratis</button>
+        </div>
+
         <header>
             <span>OffGrid Cryptography</span>
             <h1>Criptofolio Analógico</h1>
             <div id="status-badge" class="status-badge status-risk">Verificando entorno...</div>
         </header>
 
-        <div class="instrucciones">
-            <strong>1.</strong> Crea una clave segura.<br>
-            <strong>2.</strong> Dibuja tu patrón tocando el mismo número de casillas.
+        <!-- SECTOR DE MODELO DE NEGOCIO -->
+        <div class="size-selector">
+            <button id="btn-size-5" class="size-btn active" onclick="cambiarTamano(5)">5x5 (Free)</button>
+            <button class="size-btn premium-badge" onclick="abrirPaywall('12x12')">12x12 (Pro)</button>
+            <button class="size-btn premium-badge" onclick="abrirPaywall('24x24')">24x24 (Max)</button>
         </div>
 
         <div class="form-group">
             <input type="text" id="clave" placeholder="CREA TU CLAVE SEGURA" oninput="validarClaveYContadores()">
-            
             <ul class="requisitos-lista">
                 <li id="req-largo">⚬ Mínimo 6 caracteres</li>
                 <li id="req-numero">⚬ Al menos un número (0-9)</li>
-                <li id="req-especial">⚬ Al menos un símbolo ($#,!%@)</li>
+                <li id="req-especial">⚬ Al menos un símbolo ($#,!%)</li>
             </ul>
-
             <span id="contador">Letras clave: 0 | Patrón: 0</span>
         </div>
 
+        <!-- Rejilla que se adapta por JavaScript -->
         <div class="grid" id="cuadrícula"></div>
 
         <div class="actions-panel">
@@ -242,6 +189,7 @@
     <script>
         let posicionesSeleccionadas = [];
         let claveEsSegura = false;
+        let tamanoActual = 5;
 
         function verificarConexion() {
             const badge = document.getElementById('status-badge');
@@ -257,20 +205,25 @@
         window.addEventListener('offline', verificarConexion);
         verificarConexion();
 
+        // Inicializar cuadrícula adaptativa
         function inicializarGrid() {
             const contenedorGrid = document.getElementById('cuadrícula');
             contenedorGrid.innerHTML = "";
             posicionesSeleccionadas = [];
+            
+            // Ajustar columnas de la rejilla según el tamaño elegido
+            contenedorGrid.style.gridTemplateColumns = `repeat(${tamanoActual}, 1fr)`;
+            
+            const totalCasillas = tamanoActual * tamanoActual;
             validarClaveYContadores();
 
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < totalCasillas; i++) {
                 const casilla = document.createElement('div');
                 casilla.className = 'cell';
                 casilla.dataset.index = i;
                 casilla.innerText = "•"; 
                 
                 casilla.addEventListener('click', function() {
-                    // Si la clave aún no es segura, no dejamos interactuar con la cuadrícula
                     if (!claveEsSegura) {
                         alert("Socio, primero cumple con los requisitos de la contraseña.");
                         return;
@@ -281,7 +234,6 @@
                         this.classList.remove('selected');
                         posicionesSeleccionadas = posicionesSeleccionadas.filter(item => item !== index);
                     } else {
-                        // Limitar que no seleccionen más casillas que el largo de la clave
                         const largoClave = document.getElementById('clave').value.length;
                         if (posicionesSeleccionadas.length >= largoClave) {
                             alert(`Ya seleccionaste las ${largoClave} casillas de tu patrón.`);
@@ -297,16 +249,30 @@
             }
         }
 
-        // CONTROLADOR DE SEGURIDAD EN TIEMPO REAL
+        function cambiarTamano(nuevoTamano) {
+            tamanoActual = nuevoTamano;
+            inicializarGrid();
+        }
+
+        // Funciones del Paywall Comercial
+        function abrirPaywall(modo) {
+            document.getElementById('paywall').classList.add('open');
+        }
+        function cerrarPaywall() {
+            document.getElementById('paywall').classList.remove('open');
+        }
+        function simularCompra() {
+            alert("¡Transacción Simulada con Éxito, Socio!\n\nAquí conectaríamos la pasarela de Stripe o Coinbase. El usuario recibiría su código y desbloquearía los tamaños para siempre.");
+            cerrarPaywall();
+        }
+
         function validarClaveYContadores() {
             const claveInput = document.getElementById('clave').value;
             const largoClave = claveInput.length;
             
-            // Expresiones regulares para validar números y símbolos
             const tieneNumero = /[0-9]/.test(claveInput);
             const tieneEspecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(claveInput);
 
-            // Validar visualmente la lista de requisitos
             if (largoClave >= 6) document.getElementById('req-largo').className = "cumplido";
             else document.getElementById('req-largo').className = "";
 
@@ -316,13 +282,11 @@
             if (tieneEspecial) document.getElementById('req-especial').className = "cumplido";
             else document.getElementById('req-especial').className = "";
 
-            // Comprobar si pasa todo el filtro de seguridad
             claveEsSegura = (largoClave >= 6 && tieneNumero && tieneEspecial);
 
             const largoPatron = posicionesSeleccionadas.length;
             document.getElementById('contador').innerText = `Letras clave: ${largoClave} | Patrón: ${largoPatron}`;
 
-            // El botón de enviar solo se activa si la clave es segura Y el patrón coincide en longitud
             const btnEsconder = document.getElementById('btn-esconder');
             if (claveEsSegura && largoClave === largoPatron) {
                 btnEsconder.disabled = false;
@@ -356,12 +320,10 @@
             document.getElementById('clave').value = "";
             inicializarGrid();
         }
-        // --- REGISTRO DE LA PWA (NUEVO) ---
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker activo', reg))
-                    .catch(err => console.error('Error al registrar SW', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error(err));
             });
         }
 
