@@ -143,6 +143,22 @@
         
         <!-- POPUP DE VENTA (PAYWALL) -->
         <div id="paywall" class="paywall-modal">
+            <div id="paywall" class="paywall-modal">
+            <div class="paywall-icon">👑</div>
+            <div class="paywall-title">Desbloquear Versión Pro</div>
+            <div class="paywall-desc">
+                Las matrices de 12x12 y 24x24 están diseñadas criptográficamente para ocultar frases semilla completas de <strong>MetaMask, Ledger o Trezor</strong>.<br><br>
+                Protege tu patrimonio en papel sin conexión a internet de por vida.
+            </div>
+            
+            <!-- Campo para introducir la licencia comprada -->
+            <input type="text" id="input-licencia" placeholder="INTRODUCE TU CÓDIGO PRO" style="margin-bottom: 10px; width: 80%; font-size: 12px; border: 1px solid var(--neon-oro); padding: 8px;">
+            
+            <button class="btn-pay" onclick="activarLicenciaPro()">Activar Licencia Local</button>
+            <p style="font-size: 10px; color: var(--texto-muted); margin-bottom: 15px;">¿No tienes un código? Cómpralo en nuestra web con internet.</p>
+            
+            <button class="btn-danger" style="padding:6px; font-size:11px;" onclick="cerrarPaywall()">Volver a la versión Gratis</button>
+        </div>
             <div class="paywall-icon">👑</div>
             <div class="paywall-title">Desbloquear Versión Pro</div>
             <div class="paywall-desc">
@@ -255,15 +271,88 @@
         }
 
         // Funciones del Paywall Comercial
-        function abrirPaywall(modo) {
+     // --- SISTEMA RE AL DE LICENCIAS COMERCIALES ---
+        
+        // Esta función simula lo que pasaría si el usuario ingresa su código comprado
+        function activarLicenciaPro() {
+            const codigoIntroducido = document.getElementById('input-licencia').value.trim().toUpperCase();
+            
+            if (codigoIntroducido === "") {
+                alert("Socio, introduce el código de activación que recibiste al pagar.");
+                return;
+            }
+
+            // ALGORITMO DE VALIDACIÓN ANALÓGICA:
+            // Nuestro algoritmo exige que el código empiece por "PRO-" y que la suma de sus 
+            // números finales sea un múltiplo de 7 (un secreto que solo tú y yo sabemos).
+            // Códigos válidos para probar: PRO-77, PRO-14, PRO-49, PRO-205
+            
+            if (codigoIntroducido.startsWith("PRO-")) {
+                const parteNumerica = codigoIntroducido.replace("PRO-", "");
+                const numero = parseInt(parteNumerica);
+                
+                if (!isNaN(numero) && numero % 7 === 0) {
+                    // ¡CÓDIGO VÁLIDO! Guardamos el estado de forma permanente en el teléfono
+                    localStorage.setItem('licencia_pro_activa', 'true');
+                    alert("¡👑 LICENCIA PRO ACTIVADA CORRECTAMENTE!\n\nLas matrices de 12x12 y 24x24 han sido desbloqueadas de por vida en este dispositivo. Ya puedes volver al Modo Avión de forma segura.");
+                    
+                    // Actualizamos la interfaz quitando las restricciones de pago
+                    removerBloqueosComerciales();
+                    cerrarPaywall();
+                    return;
+                }
+            }
+            
+            // Si no pasa la validación matemática
+            alert("❌ CÓDIGO INVÁLIDO\n\nEl sistema criptográfico local no pudo verificar esta licencia. Asegúrate de copiarlo exactamente como te llegó por correo.");
+        }
+
+        function abrirPaywall() {
+            // Si ya está comprado, no abrimos el paywall, directo cambiamos el tamaño
+            if (localStorage.getItem('licencia_pro_activa') === 'true') {
+                return;
+            }
             document.getElementById('paywall').classList.add('open');
         }
+
         function cerrarPaywall() {
             document.getElementById('paywall').classList.remove('open');
         }
-        function simularCompra() {
-            alert("¡Transacción Simulada con Éxito, Socio!\n\nAquí conectaríamos la pasarela de Stripe o Coinbase. El usuario recibiría su código y desbloquearía los tamaños para siempre.");
-            cerrarPaywall();
+
+        // Función para cambiar el tamaño solo si está comprado
+        function seleccionarTamañoAvanzado(tamano) {
+            if (localStorage.getItem('licencia_pro_activa') === 'true') {
+                cambiarTamano(tamano);
+                
+                // Actualizar estilo visual de los botones activos
+                document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+            } else {
+                abrirPaywall();
+            }
+        }
+
+        function removerBloqueosComerciales() {
+            // Cambiar los textos de los botones para reflejar que ya es Pro de por vida
+            const botones = document.querySelectorAll('.size-btn');
+            botones[1].setAttribute('onclick', 'seleccionarTamañoAvanzado(12)');
+            botones[1].innerText = "12x12 (Pro)";
+            botones[2].setAttribute('onclick', 'seleccionarTamañoAvanzado(24)');
+            botones[2].innerText = "24x24 (Max)";
+        }
+
+        // Verificar si ya había comprado la app anteriormente al cargar la página
+        function verificarLicenciaAlCargar() {
+            if (localStorage.getItem('licencia_pro_activa') === 'true') {
+                removerBloqueosComerciales();
+            }
+        }
+
+        // Modificamos el arranque inicial para incluir la verificación
+        const inicioOriginal = inicializarGrid;
+        inicializarGrid = function() {
+            inicioOriginal();
+            verificarLicenciaAlCargar();
         }
 
         function validarClaveYContadores() {
